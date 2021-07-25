@@ -6,9 +6,9 @@
 # Jetson Nano; L4T 32.2.3
 
 LIBREALSENSE_DIRECTORY=${HOME}/librealsense
-LIBREALSENSE_VERSION=v2.31.0
+LIBREALSENSE_VERSION=v2.47.0
 INSTALL_DIR=$PWD
-NVCC_PATH=/usr/local/cuda-10.0/bin/nvcc
+NVCC_PATH=/usr/local/cuda-10.2/bin/nvcc
 
 USE_CUDA=true
 
@@ -90,14 +90,14 @@ export CUDACXX=$NVCC_PATH
 export PATH=${PATH}:/usr/local/cuda/bin
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64
 
-/usr/bin/cmake ../ -DBUILD_EXAMPLES=true -DFORCE_LIBUVC=true -DBUILD_WITH_CUDA="$USE_CUDA" -DCMAKE_BUILD_TYPE=release -DBUILD_PYTHON_BINDINGS=bool:true
+/usr/bin/cmake ../ -DBUILD_EXAMPLES=true -DFORCE_LIBUVC=true -DBUILD_WITH_CUDA="$USE_CUDA" -DCMAKE_BUILD_TYPE=release -DBUILD_PYTHON_BINDINGS=bool:true -DPYTHON_EXECUTABLE=/usr/bin/python3
 
 # The library will be installed in /usr/local/lib, header files in /usr/local/include
 # The demos, tutorials and tests will located in /usr/local/bin.
 echo "${green}Building librealsense, headers, tools and demos${reset}"
 
 NUM_CPU=$(nproc)
-time make -j$(($NUM_CPU - 1))
+make -j$(($NUM_CPU - 1))
 if [ $? -eq 0 ] ; then
   echo "librealsense make successful"
 else
@@ -106,7 +106,7 @@ else
   echo "librealsense did not build " >&2
   echo "Retrying ... "
   # Single thread this time
-  time make 
+  make 
   if [ $? -eq 0 ] ; then
     echo "librealsense make successful"
   else
@@ -131,6 +131,9 @@ echo "${green}Applying udev rules${reset}"
 # Copy over the udev rules so that camera can be run from user space
 sudo cp config/99-realsense-libusb.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules && udevadm trigger
+
+# Copy library to /usr/local/lib
+sudo cp /usr/local/lib/python3.6/pyrealsense2/py* /usr/local/lib
 
 echo "${green}Library Installed${reset}"
 echo " "
